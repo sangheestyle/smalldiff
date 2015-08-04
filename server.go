@@ -28,7 +28,8 @@ var Db gorm.DB
 
 func init() {
 	var err error
-	Db, err = gorm.Open("postgres", "user=smalldiff dbname=smalldiff password=smalldiff sslmode=disable")
+	Db, err = gorm.Open("postgres",
+		"user=smalldiff dbname=smalldiff password=smalldiff sslmode=disable")
 	if err != nil {
 		panic(err)
 	}
@@ -37,9 +38,10 @@ func init() {
 
 func main() {
 	client := github.NewClient(nil)
-
 	query := "android"
-	opts := &github.SearchOptions{Sort: "forks", Order: "desc", ListOptions: github.ListOptions{PerPage: 100}}
+	opts := &github.SearchOptions{Sort: "forks", Order: "desc",
+		ListOptions: github.ListOptions{PerPage: 100}}
+
 	for {
 		// Check RateLimit for search
 		rate, _, _ := client.RateLimits()
@@ -55,6 +57,7 @@ func main() {
 			fmt.Printf("%s\n", err)
 			fmt.Printf("Error!\n")
 		}
+
 		for _, r := range repos.Repositories {
 			repo := Repo{
 				ID:              r.ID,
@@ -71,9 +74,11 @@ func main() {
 			}
 			Db.Save(&repo)
 		}
+
 		if resp.NextPage == 0 {
 			break
 		}
+
 		opts.ListOptions.Page = resp.NextPage
 	}
 }
