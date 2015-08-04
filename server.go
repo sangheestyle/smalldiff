@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/google/go-github/github"
 	"github.com/jinzhu/gorm"
@@ -40,6 +41,15 @@ func main() {
 	query := "android"
 	opts := &github.SearchOptions{Sort: "forks", Order: "desc", ListOptions: github.ListOptions{PerPage: 100}}
 	for {
+		// Check RateLimit for search
+		rate, _, _ := client.RateLimits()
+		fmt.Printf("Remaining: %v\n", rate.Search.Remaining)
+		if rate.Search.Remaining == 0 {
+			fmt.Printf("Wait till %v\n", rate.Search.Reset)
+			duration := rate.Search.Reset.Time.Sub(time.Now()) + time.Second*5
+			time.Sleep(duration)
+		}
+
 		repos, resp, err := client.Search.Repositories(query, opts)
 		if err != nil {
 			fmt.Printf("%s\n", err)
