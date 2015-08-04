@@ -44,16 +44,16 @@ func main() {
 	}
 	for _, date := range dates {
 		query = "android in:name,description,readme created:" + date
-		total, err := CrawlGithubRepos(query)
+		created, updated, err := CrawlGithubRepos(query)
 		if err != nil {
 			fmt.Println(err)
 		}
-		fmt.Printf("Updated: %d, %s\n", total, date)
+		fmt.Printf("Created: %d, Updated: %d, %s\n", created, updated, date)
 	}
 }
 
 // CrawlGithubRepos searches repos and stores them into db
-func CrawlGithubRepos(query string) (total int, err error) {
+func CrawlGithubRepos(query string) (created int, updated int, err error) {
 	client := github.NewClient(nil)
 	opts := &github.SearchOptions{Sort: "forks", Order: "desc",
 		ListOptions: github.ListOptions{PerPage: 100}}
@@ -69,10 +69,9 @@ func CrawlGithubRepos(query string) (total int, err error) {
 
 		repos, resp, err := client.Search.Repositories(query, opts)
 		if err != nil {
-			return total, err
+			return created, updated, err
 		}
 
-		total += len(repos.Repositories)
 		for _, r := range repos.Repositories {
 			repo := Repo{
 				ID:              r.ID,
@@ -90,8 +89,10 @@ func CrawlGithubRepos(query string) (total int, err error) {
 
 			// Create new and update existed one
 			if Db.Where("ID = ?", repo.ID).First(&repo).RecordNotFound() {
+				created += 1
 				Db.Create(&repo)
 			} else {
+				updated += 1
 				Db.Save(&repo)
 			}
 		}
@@ -103,7 +104,7 @@ func CrawlGithubRepos(query string) (total int, err error) {
 		opts.ListOptions.Page = resp.NextPage
 	}
 
-	return total, err
+	return created, updated, err
 }
 
 // GenerateDates retures dates between begin and end date
