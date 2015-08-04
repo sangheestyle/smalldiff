@@ -38,7 +38,7 @@ func init() {
 
 func main() {
 	var query string
-	dates, err := GenerateDates("2015-01-01", "2015-01-15")
+	dates, err := GenerateDates("2015-01-01", "2015-01-02")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -87,7 +87,13 @@ func CrawlGithubRepos(query string) (total int, err error) {
 				WatchersCount:   r.WatchersCount,
 				Size:            r.Size,
 			}
-			Db.Save(&repo)
+
+			// Create new and update existed one
+			if Db.Where("ID = ?", repo.ID).First(&repo).RecordNotFound() {
+				Db.Create(&repo)
+			} else {
+				Db.Save(&repo)
+			}
 		}
 
 		if resp.NextPage == 0 {
