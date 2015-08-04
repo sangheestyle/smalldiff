@@ -37,27 +37,35 @@ func init() {
 }
 
 func main() {
+	query := "android in:name,description,readme created:2014-01-01"
+	total, err := CrawlGithubRepos(query)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Printf("Total: %d", total)
+}
+
+// CrawlGithubRepos searches repos and stores them into db
+func CrawlGithubRepos(query string) (total int, err error) {
 	client := github.NewClient(nil)
-	query := "android"
 	opts := &github.SearchOptions{Sort: "forks", Order: "desc",
 		ListOptions: github.ListOptions{PerPage: 100}}
 
 	for {
 		// Check RateLimit for search
 		rate, _, _ := client.RateLimits()
-		fmt.Printf("Remaining: %v\n", rate.Search.Remaining)
 		if rate.Search.Remaining == 0 {
-			fmt.Printf("Wait till %v\n", rate.Search.Reset)
+			fmt.Printf("CrawlGithubRepos: wait till %v\n", rate.Search.Reset)
 			duration := rate.Search.Reset.Time.Sub(time.Now()) + time.Second*5
 			time.Sleep(duration)
 		}
 
 		repos, resp, err := client.Search.Repositories(query, opts)
 		if err != nil {
-			fmt.Printf("%s\n", err)
-			fmt.Printf("Error!\n")
+			return total, err
 		}
 
+		total += len(repos.Repositories)
 		for _, r := range repos.Repositories {
 			repo := Repo{
 				ID:              r.ID,
@@ -81,4 +89,6 @@ func main() {
 
 		opts.ListOptions.Page = resp.NextPage
 	}
+
+	return total, err
 }
