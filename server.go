@@ -37,12 +37,19 @@ func init() {
 }
 
 func main() {
-	query := "android in:name,description,readme created:2014-01-01"
-	total, err := CrawlGithubRepos(query)
+	var query string
+	dates, err := GenerateDates("2015-01-01", "2015-01-15")
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Printf("Total: %d", total)
+	for _, date := range dates {
+		query = "android in:name,description,readme created:" + date
+		total, err := CrawlGithubRepos(query)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Printf("Updated: %d, %s\n", total, date)
+	}
 }
 
 // CrawlGithubRepos searches repos and stores them into db
@@ -91,4 +98,28 @@ func CrawlGithubRepos(query string) (total int, err error) {
 	}
 
 	return total, err
+}
+
+// GenerateDates retures dates between begin and end date
+func GenerateDates(begin string, end string) (dates []string, err error) {
+	var t1 time.Time
+	var t2 time.Time
+	layout := "2006-01-02"
+
+	t1, err = time.Parse(layout, begin)
+	if err != nil {
+		return nil, err
+	}
+	t2, err = time.Parse(layout, end)
+	if err != nil {
+		return nil, err
+	}
+	for {
+		if t1.After(t2) {
+			break
+		}
+		dates = append(dates, t1.String()[:10])
+		t1 = t1.Add(time.Hour * 24)
+	}
+	return
 }
