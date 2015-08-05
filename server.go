@@ -102,36 +102,9 @@ func CrawlGithubRepos(query string) (created int, updated int, err error) {
 		}
 
 		for _, r := range repos.Repositories {
-			// CreatedAt with nil makes panic
-			func() {
-				defer func() {
-					if r := recover(); r != nil {
-						fmt.Println("Recovered in repos", r)
-					}
-				}()
-				repo := &Repo{
-					ID:              r.ID,
-					FullName:        r.FullName,
-					GCreatedAt:      r.CreatedAt.Time,
-					GPushedAt:       r.PushedAt.Time,
-					GUpdatedAt:      r.UpdatedAt.Time,
-					GitURL:          r.GitURL,
-					Langauge:        r.Language,
-					ForksCount:      r.ForksCount,
-					OpenIssuesCount: r.OpenIssuesCount,
-					WatchersCount:   r.WatchersCount,
-					Size:            r.Size,
-				}
-
-				// Create new and update existed one
-				if Db.Where("ID = ?", repo.ID).First(repo).RecordNotFound() {
-					created += 1
-					Db.Create(repo)
-				} else {
-					updated += 1
-					Db.Save(repo)
-				}
-			}()
+			r_created, r_updated := StoreGithubRepo(r)
+			created += r_created
+			updated += r_updated
 		}
 
 		if resp.NextPage == 0 {
@@ -142,6 +115,39 @@ func CrawlGithubRepos(query string) (created int, updated int, err error) {
 	}
 
 	return created, updated, err
+}
+
+// StoreGithubRepo store a repo into DB
+func StoreGithubRepo(r github.Repository) (created int, updated int) {
+	// CreatedAt with nil makes panic
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered in repos", r)
+		}
+	}()
+	repo := &Repo{
+		ID:              r.ID,
+		FullName:        r.FullName,
+		GCreatedAt:      r.CreatedAt.Time,
+		GPushedAt:       r.PushedAt.Time,
+		GUpdatedAt:      r.UpdatedAt.Time,
+		GitURL:          r.GitURL,
+		Langauge:        r.Language,
+		ForksCount:      r.ForksCount,
+		OpenIssuesCount: r.OpenIssuesCount,
+		WatchersCount:   r.WatchersCount,
+		Size:            r.Size,
+	}
+
+	// Create new and update existed one
+	if Db.Where("ID = ?", repo.ID).First(repo).RecordNotFound() {
+		created += 1
+		Db.Create(repo)
+	} else {
+		updated += 1
+		Db.Save(repo)
+	}
+	return
 }
 
 // GenerateDates retures dates between begin and end date
