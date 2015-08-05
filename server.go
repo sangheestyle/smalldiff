@@ -56,27 +56,28 @@ func DoCrawlGithubReposForm(w http.ResponseWriter, r *http.Request, _ httprouter
 
 // Hello shows name
 func DoCrawlGithubRepos(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	if r.FormValue("password") == "repos" {
-		fmt.Fprintf(w, "Doing crawl at background!\n")
-		go func() {
-			var query string
-			dates, err := GenerateDates(r.FormValue("start_date"), r.FormValue("end_date"))
+	if r.FormValue("password") != "repos" {
+		fmt.Fprintf(w, "Can't crawl due to wrong password!\n")
+		return
+	}
+
+	go func() {
+		var query string
+		dates, err := GenerateDates(r.FormValue("start_date"), r.FormValue("end_date"))
+		if err != nil {
+			fmt.Println(err)
+		}
+		for _, date := range dates {
+			query = "android in:name,description,readme created:" + date
+			created, updated, err := CrawlGithubRepos(query)
 			if err != nil {
 				fmt.Println(err)
 			}
-			for _, date := range dates {
-				query = "android in:name,description,readme created:" + date
-				created, updated, err := CrawlGithubRepos(query)
-				if err != nil {
-					fmt.Println(err)
-				}
-				fmt.Printf("DoCrawlGithubRepos: Created: %d, Updated: %d, %s\n",
-					created, updated, date)
-			}
-		}()
-	} else {
-		fmt.Fprintf(w, "Can't crawl due to wrong password!\n")
-	}
+			fmt.Printf("DoCrawlGithubRepos: Created: %d, Updated: %d, %s\n",
+				created, updated, date)
+		}
+	}()
+	fmt.Fprintf(w, "Doing crawl at background!\n")
 }
 
 // CrawlGithubRepos searches repos and stores them into db
