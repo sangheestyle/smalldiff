@@ -49,12 +49,13 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
 
+// DoCrawlGithubReposForm responses from to crawl github repos
 func DoCrawlGithubReposForm(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	t, _ := template.ParseFiles("crawl_github_repos_form.html")
 	t.Execute(w, nil)
 }
 
-// Hello shows name
+// DoCrawlGithubRepos starts to crawl github repos
 func DoCrawlGithubRepos(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if r.FormValue("password") != "repos" {
 		fmt.Fprintf(w, "Can't crawl due to wrong password!\n")
