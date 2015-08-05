@@ -102,7 +102,7 @@ func CrawlGithubRepos(query string) (created int, updated int, err error) {
 		}
 
 		for _, r := range repos.Repositories {
-			repo := Repo{
+			repo := &Repo{
 				ID:              r.ID,
 				FullName:        r.FullName,
 				GCreatedAt:      r.CreatedAt.Time,
@@ -117,12 +117,12 @@ func CrawlGithubRepos(query string) (created int, updated int, err error) {
 			}
 
 			// Create new and update existed one
-			if Db.Where("ID = ?", repo.ID).First(&repo).RecordNotFound() {
+			if Db.Where("ID = ?", repo.ID).First(repo).RecordNotFound() {
 				created += 1
-				Db.Create(&repo)
+				Db.Create(repo)
 			} else {
 				updated += 1
-				Db.Save(&repo)
+				Db.Save(repo)
 			}
 		}
 
