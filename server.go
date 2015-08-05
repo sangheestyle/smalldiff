@@ -17,9 +17,9 @@ type Repo struct {
 	ID              *int
 	Name            *string
 	FullName        *string
-	CreatedAt       time.Time
-	PushedAt        time.Time
-	UpdatedAt       time.Time
+	GCreatedAt      time.Time
+	GPushedAt       time.Time
+	GUpdatedAt      time.Time
 	GitURL          *string
 	Langauge        *string
 	ForksCount      *int
@@ -105,9 +105,9 @@ func CrawlGithubRepos(query string) (created int, updated int, err error) {
 			repo := Repo{
 				ID:              r.ID,
 				FullName:        r.FullName,
-				CreatedAt:       r.CreatedAt.Time,
-				PushedAt:        r.PushedAt.Time,
-				UpdatedAt:       r.UpdatedAt.Time,
+				GCreatedAt:      r.CreatedAt.Time,
+				GPushedAt:       r.PushedAt.Time,
+				GUpdatedAt:      r.UpdatedAt.Time,
 				GitURL:          r.GitURL,
 				Langauge:        r.Language,
 				ForksCount:      r.ForksCount,
