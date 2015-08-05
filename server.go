@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 	"time"
 
 	"github.com/google/go-github/github"
 	"github.com/jinzhu/gorm"
+	"github.com/julienschmidt/httprouter"
 	_ "github.com/lib/pq"
 )
 
@@ -37,18 +40,33 @@ func init() {
 }
 
 func main() {
-	var query string
-	dates, err := GenerateDates("2015-01-01", "2015-01-02")
-	if err != nil {
-		fmt.Println(err)
-	}
-	for _, date := range dates {
-		query = "android in:name,description,readme created:" + date
-		created, updated, err := CrawlGithubRepos(query)
+	mux := httprouter.New()
+
+	mux.GET("/crawl/github/:name", DoCrawlGithubRepos)
+
+	log.Fatal(http.ListenAndServe(":8080", mux))
+}
+
+// Hello shows name
+func DoCrawlGithubRepos(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	if p.ByName("name") == "repos" {
+		fmt.Fprintf(w, "Crawl, %s!\n", p.ByName("name"))
+		var query string
+		dates, err := GenerateDates("2015-01-01", "2015-01-02")
 		if err != nil {
 			fmt.Println(err)
 		}
-		fmt.Printf("Created: %d, Updated: %d, %s\n", created, updated, date)
+		for _, date := range dates {
+			query = "android in:name,description,readme created:" + date
+			created, updated, err := CrawlGithubRepos(query)
+			if err != nil {
+				fmt.Println(err)
+			}
+			fmt.Printf("DoCrawlGithubRepos: Created: %d, Updated: %d, %s\n",
+				created, updated, date)
+		}
+	} else {
+		fmt.Fprintf(w, "Not Crawl, %s!\n", p.ByName("name"))
 	}
 }
 
