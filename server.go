@@ -57,6 +57,11 @@ func main() {
 
 // StatGithubReposHandler shows stat of crawled github repos
 func StatGithubReposHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if ps.ByName("type") != "repos" {
+		fmt.Fprintf(w, "Error: %s is not supported now.", ps.ByName("type"))
+		return
+	}
+
 	type Result struct {
 		Date  time.Time
 		Count int
