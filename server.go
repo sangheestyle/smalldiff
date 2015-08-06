@@ -50,15 +50,18 @@ func main() {
 
 	mux.GET("/crawl/github/repos", CrawlGithubReposFormHandler)
 	mux.POST("/crawl/github/repos", CrawlGithubReposHandler)
-	mux.GET("/stat/github/:type", StatGithubReposHandler)
+	mux.GET("/stat/github/repos/:type", StatGithubReposHandler)
 
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
 
 // StatGithubReposHandler shows stat of crawled github repos
 func StatGithubReposHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if ps.ByName("type") != "repos" {
-		fmt.Fprintf(w, "Error: %s is not supported now.", ps.ByName("type"))
+	date_type := ps.ByName("type")
+
+	if date_type != "day" && date_type != "month" && date_type != "year" {
+		fmt.Fprintf(w, "Error: %s is not supported. Choose day, month, year only",
+			ps.ByName("type"))
 		return
 	}
 
@@ -68,7 +71,7 @@ func StatGithubReposHandler(w http.ResponseWriter, r *http.Request, ps httproute
 	}
 
 	var results []Result
-	Db.Table("repos").Select("date_trunc('day', g_created_at) as date, count(*) as count").Group("date_trunc('day', g_created_at)").Order("date", true).Scan(&results)
+	Db.Table("repos").Select("date_trunc('"+date_type+"', g_created_at) as date, count(*) as count").Group("date_trunc('"+date_type+"', g_created_at)").Order("date", true).Scan(&results)
 
 	t, _ := template.ParseFiles("stat_github_repos.html")
 	t.Execute(w, results)
