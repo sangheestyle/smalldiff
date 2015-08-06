@@ -37,6 +37,11 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+
+	if !Db.HasTable(&Repo{}) {
+		Db.CreateTable(&Repo{})
+	}
+
 	Db.AutoMigrate(&Repo{})
 }
 
