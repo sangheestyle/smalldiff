@@ -48,20 +48,20 @@ func init() {
 func main() {
 	mux := httprouter.New()
 
-	mux.GET("/crawl/github/repos", DoCrawlGithubReposForm)
-	mux.POST("/crawl/github/repos", DoCrawlGithubRepos)
+	mux.GET("/crawl/github/repos", CrawlGithubReposFormHandler)
+	mux.POST("/crawl/github/repos", CrawlGithubReposHandler)
 
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
 
-// DoCrawlGithubReposForm responses from to crawl github repos
-func DoCrawlGithubReposForm(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+// CrawlGithubReposFormHandler responses from to crawl github repos
+func CrawlGithubReposFormHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	t, _ := template.ParseFiles("crawl_github_repos_form.html")
 	t.Execute(w, nil)
 }
 
-// DoCrawlGithubRepos starts to crawl github repos
-func DoCrawlGithubRepos(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+// CrawlGithubReposHandler starts to crawl github repos
+func CrawlGithubReposHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if r.FormValue("password") != "repos" {
 		fmt.Fprintf(w, "Can't crawl due to wrong password!\n")
 		return
