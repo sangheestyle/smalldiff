@@ -64,7 +64,9 @@ func StatGithubReposHandler(w http.ResponseWriter, r *http.Request, ps httproute
 
 	var results []Result
 	Db.Table("repos").Select("date_trunc('day', g_created_at) as date, count(*) as count").Group("date_trunc('day', g_created_at)").Order("date", true).Scan(&results)
-	fmt.Fprintln(w, results)
+
+	t, _ := template.ParseFiles("stat_github_repos.html")
+	t.Execute(w, results)
 }
 
 // CrawlGithubReposFormHandler responses from to crawl github repos
