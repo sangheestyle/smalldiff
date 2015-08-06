@@ -50,8 +50,21 @@ func main() {
 
 	mux.GET("/crawl/github/repos", CrawlGithubReposFormHandler)
 	mux.POST("/crawl/github/repos", CrawlGithubReposHandler)
+	mux.GET("/stat/github/:type", StatGithubReposHandler)
 
 	log.Fatal(http.ListenAndServe(":8080", mux))
+}
+
+// StatGithubReposHandler shows stat of crawled github repos
+func StatGithubReposHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	type Result struct {
+		Date  time.Time
+		Count int
+	}
+
+	var results []Result
+	Db.Table("repos").Select("date_trunc('day', g_created_at) as date, count(*) as count").Group("date_trunc('day', g_created_at)").Order("date", true).Scan(&results)
+	fmt.Fprintln(w, results)
 }
 
 // CrawlGithubReposFormHandler responses from to crawl github repos
