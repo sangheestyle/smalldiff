@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
@@ -51,8 +52,40 @@ func main() {
 	mux.GET("/crawl/github/repos", CrawlGithubReposFormHandler)
 	mux.POST("/crawl/github/repos", CrawlGithubReposHandler)
 	mux.GET("/stat/github/repos/:type", StatGithubReposHandler)
+	mux.GET("/json/stat/github/repos/:type", JSONStatGithubReposHandler)
 
 	log.Fatal(http.ListenAndServe(":8080", mux))
+}
+
+// JSONStatGithubReposHandler shows stat of crawled github repos
+func JSONStatGithubReposHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	date_type := ps.ByName("type")
+
+	if date_type != "day" && date_type != "month" && date_type != "year" {
+		fmt.Fprintf(w, "Error: %s is not supported. Choose day, month, year only",
+			ps.ByName("type"))
+		return
+	}
+
+	type Result struct {
+		Date  time.Time `json:"date"`
+		Count int       `json:"count"`
+	}
+
+	var results []Result
+	Db.Table("repos").Select("date_trunc('"+date_type+"', g_created_at) as date, count(*) as count").Group("date_trunc('"+date_type+"', g_created_at)").Order("date", true).Scan(&results)
+
+	output, err := json.MarshalIndent(&results, "", "\t")
+
+	if err != nil {
+		return
+	}
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(output)
+
+	return
 }
 
 // StatGithubReposHandler shows stat of crawled github repos
