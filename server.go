@@ -55,7 +55,7 @@ func main() {
 	mux.GET("/json/stat/github/repos/:type", JSONStatGithubReposTypeHandler)
 	mux.GET("/json/stat/github/reposfw", JSONStatGithubReposFWHandler)
 
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	log.Fatal(http.ListenAndServe(":8000", mux))
 }
 
 // JSONStatGithubReposFWHandler shows stat of crawled github repos
