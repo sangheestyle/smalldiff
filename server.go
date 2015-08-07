@@ -54,8 +54,43 @@ func main() {
 	mux.GET("/stat/github/repos/:type", StatGithubReposHandler)
 	mux.GET("/json/stat/github/repos/:type", JSONStatGithubReposTypeHandler)
 	mux.GET("/json/stat/github/reposfw", JSONStatGithubReposFWHandler)
+	mux.GET("/json/stat/github/reposws", JSONStatGithubReposWSHandler)
 
 	log.Fatal(http.ListenAndServe(":8000", mux))
+}
+
+// JSONStatGithubReposWSHandler shows stat of crawled github repos
+func JSONStatGithubReposWSHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	type RepoProperty struct {
+		WatchersCount int
+		Size          int
+	}
+
+	var repoProperties []RepoProperty
+	Db.Table("repos").Select("watchers_count, size").Where("watchers_count>0 AND size>0").Scan(&repoProperties)
+
+	type Result struct {
+		WatchersCount []int `json:"watchers_count"`
+		Size          []int `json:"size"`
+	}
+
+	var result Result
+	for _, rp := range repoProperties {
+		result.WatchersCount = append(result.WatchersCount, rp.WatchersCount)
+		result.Size = append(result.Size, rp.Size)
+	}
+
+	output, err := json.Marshal(&result)
+
+	if err != nil {
+		return
+	}
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(output)
+
+	return
 }
 
 // JSONStatGithubReposFWHandler shows stat of crawled github repos

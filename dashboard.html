@@ -15,12 +15,8 @@
     <h2>Relationship between watchers and forks count</h2>
     <div id="chart_rel_watchers_forks"></div>
 
-    <!-- TODO: Need to draw some more trend graph -->
-    <!--
-
     <h2>Relationship between watchers and size</h2>
     <div id="chart_rel_watchers_size"></div>
-    -->
 
     <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.min.js" charset="utf-8"></script>
@@ -98,31 +94,36 @@
         });
       })();
     </script>
-<!--
+
     <script>
-    var chart = c3.generate({
-        bindto: '#chart_rel_watchers_size',
-        data: {
-            xs: {
-                s: 'w',
-            },
-            url: 'rel_watchers_size.csv',
-            type: 'scatter'
-        },
-        axis: {
-            x: {
-                label: 'watchers count',
-                tick: {
-                    fit: false
-                }
-            },
-            y: {
-                label: 'repo size'
-            }
-        },
-    });
+      (function() {
+        var museAPI = "http://localhost:8000/json/stat/github/reposws";
+        $.getJSON(museAPI)
+        .done(function(data) {
+			var chart = c3.generate({
+				bindto: '#chart_rel_watchers_size',
+				data: {
+					xs: {
+						watchers_count: 'size',
+					},
+					json: data,
+					type: 'scatter'
+				},
+				axis: {
+					x: {
+						label: 'watchers count',
+						tick: {
+							fit: false
+						}
+					},
+					y: {
+						label: 'size'
+					}
+				},
+			});
+        });
+      })();
     </script>
-	-->
   </div>
   </body>
 </html>
