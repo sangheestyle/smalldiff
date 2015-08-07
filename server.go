@@ -52,13 +52,48 @@ func main() {
 	mux.GET("/crawl/github/repos", CrawlGithubReposFormHandler)
 	mux.POST("/crawl/github/repos", CrawlGithubReposHandler)
 	mux.GET("/stat/github/repos/:type", StatGithubReposHandler)
-	mux.GET("/json/stat/github/repos/:type", JSONStatGithubReposHandler)
+	mux.GET("/json/stat/github/repos/:type", JSONStatGithubReposTypeHandler)
+	mux.GET("/json/stat/github/reposfw", JSONStatGithubReposFWHandler)
 
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
 
-// JSONStatGithubReposHandler shows stat of crawled github repos
-func JSONStatGithubReposHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// JSONStatGithubReposFWHandler shows stat of crawled github repos
+func JSONStatGithubReposFWHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	type Count struct {
+		ForksCount    int
+		WatchersCount int
+	}
+
+	var counts []Count
+	Db.Table("repos").Select("forks_count, watchers_count").Where("watchers_count>0 AND forks_count>0").Scan(&counts)
+
+	type Result struct {
+		ForksCount    []int `json:"forks_count"`
+		WatchersCount []int `json:"watchers_count"`
+	}
+
+	var result Result
+	for _, c := range counts {
+		result.ForksCount = append(result.ForksCount, c.ForksCount)
+		result.WatchersCount = append(result.WatchersCount, c.WatchersCount)
+	}
+
+	output, err := json.Marshal(&result)
+
+	if err != nil {
+		return
+	}
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(output)
+
+	return
+}
+
+// JSONStatGithubReposTypeHandler shows stat of crawled github repos
+func JSONStatGithubReposTypeHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	date_type := ps.ByName("type")
 
 	if date_type != "day" && date_type != "month" && date_type != "year" {

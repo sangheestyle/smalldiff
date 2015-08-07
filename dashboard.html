@@ -12,10 +12,11 @@
     <h2>Number of created repos per day</h2>
     <div id="chart"></div>
 
+    <h2>Relationship between watchers and forks count</h2>
+    <div id="chart_rel_watchers_forks"></div>
+
     <!-- TODO: Need to draw some more trend graph -->
     <!--
-    <h2>Relationship between watchers and forks</h2>
-    <div id="chart_rel_watchers_forks"></div>
 
     <h2>Relationship between watchers and size</h2>
     <div id="chart_rel_watchers_size"></div>
@@ -69,29 +70,35 @@
     </script>
 
     <script>
-    var chart = c3.generate({
-        bindto: '#chart_rel_watchers_forks',
-        data: {
-            xs: {
-                watchers: 'forks',
-            },
-            url: 'rel_watchers_forks.csv',
-            type: 'scatter'
-        },
-        axis: {
-            x: {
-                label: 'watchers count',
-                tick: {
-                    fit: false
-                }
-            },
-            y: {
-                label: 'forks count'
-            }
-        },
-    });
+      (function() {
+        var museAPI = "http://localhost:8000/json/stat/github/reposfw";
+        $.getJSON(museAPI)
+        .done(function(data) {
+			var chart = c3.generate({
+				bindto: '#chart_rel_watchers_forks',
+				data: {
+					xs: {
+						watchers_count: 'forks_count',
+					},
+					json: data,
+					type: 'scatter'
+				},
+				axis: {
+					x: {
+						label: 'watchers count',
+						tick: {
+							fit: false
+						}
+					},
+					y: {
+						label: 'forks count'
+					}
+				},
+			});
+        });
+      })();
     </script>
-
+<!--
     <script>
     var chart = c3.generate({
         bindto: '#chart_rel_watchers_size',
@@ -115,7 +122,7 @@
         },
     });
     </script>
-
+	-->
   </div>
   </body>
 </html>
